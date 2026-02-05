@@ -1,9 +1,13 @@
+'use client'
+
 import { mockSubscriptions } from '@/lib/data'
 import { formatCurrency, formatBillingCycle, formatDate } from '@/lib/utils'
 import Link from 'next/link'
 import { SubscriptionType, SubscriptionStatus } from '@/lib/types'
+import { useState } from 'react'
 
 export default function Subscriptions() {
+  const [hoveredRow, setHoveredRow] = useState<string | null>(null)
   return (
     <div style={{ padding: '2rem 0', minHeight: '100vh' }}>
       <div className="container">
@@ -46,14 +50,11 @@ export default function Subscriptions() {
                     key={subscription.id}
                     style={{ 
                       borderBottom: '1px solid var(--border-color)',
-                      transition: 'background-color 0.2s ease'
+                      transition: 'background-color 0.2s ease',
+                      backgroundColor: hoveredRow === subscription.id ? 'var(--bg-primary)' : 'transparent'
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--bg-primary)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                    }}
+                    onMouseEnter={() => setHoveredRow(subscription.id)}
+                    onMouseLeave={() => setHoveredRow(null)}
                   >
                     <td style={{ padding: '1rem 24px' }}>
                       <Link 
