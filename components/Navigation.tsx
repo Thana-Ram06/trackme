@@ -94,10 +94,17 @@ export default function Navigation() {
                   <div className="flex items-center gap-3">
                     {/* User avatar */}
                     {user?.image && (
-                      <img
-                        src={user.image}
-                        alt={user.name || 'User'}
-                        className="w-8 h-8 rounded-full"
+                      <div 
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          backgroundImage: `url(${user.image})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                          backgroundColor: 'var(--bg-secondary)'
+                        }}
+                        title={user.name || 'User'}
                       />
                     )}
                     {/* Logout button */}
