@@ -10,20 +10,20 @@ export async function getSession() {
 export async function requireAuth() {
   const session = await getSession()
   
-  if (!session?.user?.id) {
+  if (!session?.user?.email) {
     redirect('/')
   }
   
   return session
 }
 
-// Get current user ID securely
-export async function getCurrentUserId() {
+// Get current user email securely (using email for data isolation)
+export async function getCurrentUserEmail() {
   const session = await getSession()
   
-  if (!session?.user?.id) {
+  if (!session?.user?.email) {
     throw new Error('User not authenticated')
   }
   
-  return session.user.id
+  return session.user.email
 }

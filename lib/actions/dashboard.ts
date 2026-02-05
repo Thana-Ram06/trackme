@@ -1,18 +1,18 @@
 'use server'
 
-import { getCurrentUserId } from '@/lib/auth'
+import { getCurrentUserEmail } from '@/lib/auth'
 import connectDB from '@/lib/mongoose'
-import Subscription from '@/lib/models/Subscription'
+import { Subscription } from '@/lib/models'
 
 // Calculate dashboard summary for the current user only
 export async function calculateUserDashboardSummary() {
   try {
-    const userId = await getCurrentUserId()
+    const userEmail = await getCurrentUserEmail()
     await connectDB()
     
     // Only fetch active subscriptions for the current user
     const activeSubscriptions = await Subscription.find({ 
-      userId, 
+      userEmail, 
       status: 'active' 
     }).lean()
     
@@ -51,14 +51,14 @@ export async function calculateUserDashboardSummary() {
 // Get upcoming renewals for the current user only
 export async function getUserUpcomingRenewals() {
   try {
-    const userId = await getCurrentUserId()
+    const userEmail = await getCurrentUserEmail()
     await connectDB()
     
     const today = new Date()
     const thirtyDaysFromNow = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000))
     
     const subscriptions = await Subscription.find({
-      userId,
+      userEmail,
       status: 'active',
       nextRenewalDate: { $gte: today, $lte: thirtyDaysFromNow }
     })

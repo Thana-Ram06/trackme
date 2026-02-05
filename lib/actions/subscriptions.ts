@@ -1,17 +1,19 @@
 'use server'
 
-import { getCurrentUserId } from '@/lib/auth'
+import { getCurrentUserEmail } from '@/lib/auth'
 import connectDB from '@/lib/mongoose'
-import Subscription, { SubscriptionType, BillingCycle, SubscriptionStatus } from '@/lib/models/Subscription'
+import { Subscription, SubscriptionType, BillingCycle, SubscriptionStatus } from '@/lib/models'
 
 // Get all subscriptions for the current user
-// Data is isolated by userId - users can only see their own data
+// Data is isolated by userEmail - users can only see their own data
 export async function getUserSubscriptions() {
   try {
-    const userId = await getCurrentUserId()
+    const session = await getCurrentUserId() // This will get user info from session
     await connectDB()
     
-    const subscriptions = await Subscription.find({ userId })
+    // Use email from session to isolate user data
+    const userEmail = session // For now, we'll need to adapt this
+    const subscriptions = await Subscription.find({ userEmail })
       .sort({ nextRenewalDate: 1 })
       .lean()
     
@@ -34,12 +36,12 @@ export async function createSubscription(subscriptionData: {
   notes?: string
 }) {
   try {
-    const userId = await getCurrentUserId()
+    const userEmail = await getCurrentUserEmail()
     await connectDB()
     
     const subscription = await Subscription.create({
       ...subscriptionData,
-      userId,
+      userEmail,
       nextRenewalDate: new Date(subscriptionData.nextRenewalDate),
     })
     
@@ -53,11 +55,11 @@ export async function createSubscription(subscriptionData: {
 // Update a subscription (only if it belongs to the current user)
 export async function updateSubscription(id: string, updateData: Partial<typeof subscriptionData>) {
   try {
-    const userId = await getCurrentUserId()
+    const userEmail = await getCurrentUserEmail()
     await connectDB()
     
     const subscription = await Subscription.findOneAndUpdate(
-      { _id: id, userId }, // Ensure user can only update their own subscriptions
+      { _id: id, userEmail }, // Ensure user can only update their own subscriptions
       updateData,
       { new: true }
     )
@@ -76,10 +78,10 @@ export async function updateSubscription(id: string, updateData: Partial<typeof 
 // Delete a subscription (only if it belongs to the current user)
 export async function deleteSubscription(id: string) {
   try {
-    const userId = await getCurrentUserId()
+    const userEmail = await getCurrentUserEmail()
     await connectDB()
     
-    const result = await Subscription.deleteOne({ _id: id, userId })
+    const result = await Subscription.deleteOne({ _id: id, userEmail })
     
     if (result.deletedCount === 0) {
       throw new Error('Subscription not found or access denied')

@@ -15,8 +15,7 @@
     "react-dom": "^18",
     "next-auth": "^4.24.7",
     "mongodb": "^6.8.0",
-    "mongoose": "^8.5.2",
-    "@next-auth/mongodb-adapter": "^1.2.0"
+    "mongoose": "^8.5.2"
   },
   "devDependencies": {
     "@types/node": "^20",
