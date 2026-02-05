@@ -8,7 +8,7 @@ export default function Home() {
         <div className="container">
           <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
             <h1 style={{ marginBottom: '1.5rem', lineHeight: 1.1 }}>
-              Track subscriptions. Know what's coming.
+              Track subscriptions. Know what&apos;s coming.
             </h1>
             
             <p style={{ fontSize: '1.25rem', marginBottom: '2.5rem', color: 'var(--text-secondary)' }}>
