@@ -1,6 +1,28 @@
+'use client'
+
 import Link from 'next/link'
+import { useAuth } from '@/hooks/useAuth'
+import { useEffect } from 'react'
 
 export default function Home() {
+  const { isAuthenticated, isLoading } = useAuth()
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      window.location.href = '/dashboard'
+    }
+  }, [isAuthenticated])
+
+  if (isLoading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: 'var(--text-secondary)' }}>Loading...</p>
+      </div>
+    )
+  }
+
+  // Show landing page only for non-authenticated users
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Hero Section */}

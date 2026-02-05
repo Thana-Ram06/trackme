@@ -1,10 +1,40 @@
-import { mockSubscriptions } from '@/lib/data'
-import { calculateDashboardSummary, getUpcomingRenewals, formatCurrency, formatDate } from '@/lib/utils'
+import { calculateUserDashboardSummary, getUserUpcomingRenewals } from '@/lib/actions/dashboard'
+import { formatCurrency, formatDate } from '@/lib/utils'
 import Link from 'next/link'
 
-export default function Dashboard() {
-  const summary = calculateDashboardSummary(mockSubscriptions)
-  const upcomingRenewals = getUpcomingRenewals(mockSubscriptions)
+export default async function Dashboard() {
+  try {
+    const summary = await calculateUserDashboardSummary()
+    const upcomingRenewals = await getUserUpcomingRenewals()
+
+    // Empty state for new users
+    if (summary.activeSubscriptions === 0 && upcomingRenewals.length === 0) {
+      return (
+        <div style={{ padding: '2rem 0', minHeight: '100vh' }}>
+          <div className="container">
+            <div style={{ marginBottom: '3rem' }}>
+              <h1>Dashboard</h1>
+              <p style={{ color: 'var(--text-secondary)' }}>
+                Overview of your recurring income and expenses
+              </p>
+            </div>
+
+            {/* Empty State */}
+            <div className="card" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
+              <h2 style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
+                Welcome to Track.me!
+              </h2>
+              <p style={{ marginBottom: '2rem', color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto 2rem' }}>
+                You haven&apos;t added any subscriptions yet. Start tracking your recurring income and expenses to get insights into your financial patterns.
+              </p>
+              <Link href="/subscriptions" className="btn btn-primary">
+                Add Your First Subscription
+              </Link>
+            </div>
+          </div>
+        </div>
+      )
+    }
 
   return (
     <div style={{ padding: '2rem 0', minHeight: '100vh' }}>
@@ -130,4 +160,24 @@ export default function Dashboard() {
       </div>
     </div>
   )
+  } catch (error) {
+    console.error('Dashboard error:', error)
+    return (
+      <div style={{ padding: '2rem 0', minHeight: '100vh' }}>
+        <div className="container">
+          <div className="card" style={{ textAlign: 'center', padding: '3rem 2rem' }}>
+            <h2 style={{ marginBottom: '1rem', color: 'var(--error)' }}>
+              Error Loading Dashboard
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+              Unable to load your dashboard data. Please try refreshing the page or contact support if the problem persists.
+            </p>
+            <Link href="/" className="btn btn-primary">
+              Back to Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
 }

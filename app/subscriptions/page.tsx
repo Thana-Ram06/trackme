@@ -1,13 +1,111 @@
 'use client'
 
-import { mockSubscriptions } from '@/lib/data'
+'use client'
+
+import { getUserSubscriptions } from '@/lib/actions/subscriptions'
 import { formatCurrency, formatBillingCycle, formatDate } from '@/lib/utils'
 import Link from 'next/link'
 import { SubscriptionType, SubscriptionStatus } from '@/lib/types'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useAuth } from '@/hooks/useAuth'
 
 export default function Subscriptions() {
+  const { isAuthenticated } = useAuth()
+  const [subscriptions, setSubscriptions] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [hoveredRow, setHoveredRow] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadSubscriptions()
+    }
+  }, [isAuthenticated])
+
+  const loadSubscriptions = async () => {
+    try {
+      setLoading(true)
+      const data = await getUserSubscriptions()
+      setSubscriptions(data)
+    } catch (err) {
+      setError('Failed to load subscriptions')
+      console.error('Error loading subscriptions:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (!isAuthenticated) {
+    return null // Will be handled by middleware redirect
+  }
+
+  if (loading) {
+    return (
+      <div style={{ padding: '2rem 0', minHeight: '100vh' }}>
+        <div className="container">
+          <div style={{ textAlign: 'center', padding: '4rem 0' }}>
+            <p style={{ color: 'var(--text-secondary)' }}>Loading subscriptions...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: '2rem 0', minHeight: '100vh' }}>
+        <div className="container">
+          <div className="card" style={{ textAlign: 'center', padding: '3rem 2rem' }}>
+            <h2 style={{ marginBottom: '1rem', color: 'var(--error)' }}>
+              Error Loading Subscriptions
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+              {error}
+            </p>
+            <button 
+              onClick={loadSubscriptions}
+              className="btn btn-primary"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Empty state
+  if (subscriptions.length === 0) {
+    return (
+      <div style={{ padding: '2rem 0', minHeight: '100vh' }}>
+        <div className="container">
+          <div style={{ marginBottom: '3rem' }}>
+            <h1>Subscriptions</h1>
+            <p style={{ color: 'var(--text-secondary)' }}>
+              Manage your recurring income and expenses
+            </p>
+          </div>
+
+          <div className="card" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
+            <h2 style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
+              No Subscriptions Yet
+            </h2>
+            <p style={{ marginBottom: '2rem', color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto 2rem' }}>
+              You haven&apos;t added any subscriptions yet. Start by adding your recurring income sources and expenses to get a complete picture of your financial flow.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Link href="/dashboard" className="btn btn-primary">
+                View Dashboard
+              </Link>
+              <button className="btn btn-secondary" disabled>
+                Add Subscription (Coming Soon)
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
   return (
     <div style={{ padding: '2rem 0', minHeight: '100vh' }}>
       <div className="container">
@@ -45,7 +143,7 @@ export default function Subscriptions() {
                 </tr>
               </thead>
               <tbody>
-                {mockSubscriptions.map((subscription) => (
+                {subscriptions.map((subscription) => (
                   <tr 
                     key={subscription.id}
                     style={{ 
@@ -141,7 +239,7 @@ export default function Subscriptions() {
               Total Subscriptions
             </h3>
             <p style={{ fontSize: '1.5rem', fontWeight: '600', margin: 0 }}>
-              {mockSubscriptions.length}
+              {subscriptions.length}
             </p>
           </div>
 
@@ -150,7 +248,7 @@ export default function Subscriptions() {
               Active Income Streams
             </h3>
             <p style={{ fontSize: '1.5rem', fontWeight: '600', margin: 0, color: 'var(--success)' }}>
-              {mockSubscriptions.filter(sub => sub.type === 'income' && sub.status === 'active').length}
+              {subscriptions.filter(sub => sub.type === 'income' && sub.status === 'active').length}
             </p>
           </div>
 
@@ -159,7 +257,7 @@ export default function Subscriptions() {
               Active Expenses
             </h3>
             <p style={{ fontSize: '1.5rem', fontWeight: '600', margin: 0, color: 'var(--error)' }}>
-              {mockSubscriptions.filter(sub => sub.type === 'expense' && sub.status === 'active').length}
+              {subscriptions.filter(sub => sub.type === 'expense' && sub.status === 'active').length}
             </p>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { Inter, Instrument_Serif } from 'next/font/google'
 import './globals.css'
 import Navigation from '@/components/Navigation'
+import Providers from '@/components/Providers'
 import { Metadata } from 'next'
 
 const inter = Inter({
@@ -42,9 +43,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${instrumentSerif.variable}`}>
-      <body>
-        <Navigation />
-        <main>{children}</main>
+      <body className={inter.className}>
+        <Providers>
+          <Navigation />
+          <main>{children}</main>
+        </Providers>
       </body>
     </html>
   )

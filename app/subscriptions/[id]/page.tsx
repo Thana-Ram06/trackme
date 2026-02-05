@@ -1,5 +1,5 @@
-import { mockSubscriptions } from '@/lib/data'
-import { getSubscriptionById, formatCurrency, formatBillingCycle, formatDate } from '@/lib/utils'
+import { getUserSubscriptions } from '@/lib/actions/subscriptions'
+import { formatCurrency, formatBillingCycle, formatDate } from '@/lib/utils'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
@@ -9,12 +9,18 @@ interface SubscriptionDetailPageProps {
   }
 }
 
-export default function SubscriptionDetailPage({ params }: SubscriptionDetailPageProps) {
-  const subscription = getSubscriptionById(mockSubscriptions, params.id)
+export default async function SubscriptionDetailPage({ params }: SubscriptionDetailPageProps) {
+  try {
+    const subscriptions = await getUserSubscriptions()
+    const subscription = subscriptions.find(sub => sub._id.toString() === params.id)
 
-  if (!subscription) {
-    notFound()
-  }
+    if (!subscription) {
+      notFound()
+    }
+
+    if (!subscription) {
+      notFound()
+    }
 
   return (
     <div style={{ padding: '2rem 0', minHeight: '100vh' }}>
@@ -238,6 +244,26 @@ export default function SubscriptionDetailPage({ params }: SubscriptionDetailPag
       </div>
     </div>
   )
+  } catch (error) {
+    console.error('Error loading subscription detail:', error)
+    return (
+      <div style={{ padding: '2rem 0', minHeight: '100vh' }}>
+        <div className="container">
+          <div className="card" style={{ textAlign: 'center', padding: '3rem 2rem' }}>
+            <h2 style={{ marginBottom: '1rem', color: 'var(--error)' }}>
+              Error Loading Subscription
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+              Unable to load subscription details. Please try refreshing the page.
+            </p>
+            <Link href="/subscriptions" className="btn btn-primary">
+              Back to Subscriptions
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
 }
 
 function generateTimeline(subscription: any) {
