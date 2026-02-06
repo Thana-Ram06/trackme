@@ -1,14 +1,15 @@
 'use client'
 
+import { signIn, signOut, useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { useAuth } from '@/hooks/useAuth'
 
 export default function Navigation() {
+  const { data: session } = useSession()
   const pathname = usePathname()
-  const { user, isLoading, isAuthenticated } = useAuth()
   const [isDarkMode, setIsDarkMode] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme')
@@ -25,14 +26,28 @@ export default function Navigation() {
     document.documentElement.setAttribute('data-theme', newTheme)
   }
 
-  const handleSignIn = () => {
-    window.location.href = '/api/auth/signin'
+  const handleSignIn = async () => {
+    setIsLoading(true)
+    try {
+      await signIn('google', { redirect: false })
+    } catch (error) {
+      console.error('Sign in error:', error)
+      alert('Failed to sign in. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleSignOut = () => {
-    // For frontend-only version, just clear localStorage
-    localStorage.removeItem('theme')
-    window.location.href = '/'
+  const handleSignOut = async () => {
+    setIsLoading(true)
+    try {
+      await signOut()
+      localStorage.removeItem('theme')
+    } catch (error) {
+      console.error('Sign out error:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -46,32 +61,43 @@ export default function Navigation() {
           
           {/* RIGHT SIDE: Actions only */}
           <div className="flex items-center gap-4">
-            {/* Navigation links - only show when authenticated */}
-            {isAuthenticated && (
-              <div className="flex gap-4 mr-6">
-                <Link
-                  href="/dashboard"
-                  className={`transition-colors ${
-                    pathname === '/dashboard' ? '' : 'hover:text-blue-600'
-                  }`}
-                  style={{ 
-                    color: pathname === '/dashboard' ? 'var(--accent)' : 'var(--text-primary)' 
-                  }}
+            {/* User section */}
+            {session ? (
+              <div className="flex items-center gap-3">
+                {/* User avatar */}
+                {session.user?.image && (
+                  <div 
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      backgroundImage: `url(${session.user.image})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundColor: 'var(--bg-secondary)'
+                    }}
+                    title={session.user.name || 'User'}
+                  />
+                )}
+                {/* Logout button */}
+                <button
+                  onClick={handleSignOut}
+                  disabled={isLoading}
+                  className="btn btn-secondary"
+                  style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
                 >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/subscriptions"
-                  className={`transition-colors ${
-                    pathname.startsWith('/subscriptions') ? '' : 'hover:text-blue-600'
-                  }`}
-                  style={{ 
-                    color: pathname.startsWith('/subscriptions') ? 'var(--accent)' : 'var(--text-primary)' 
-                  }}
-                >
-                  Subscriptions
-                </Link>
+                  {isLoading ? 'Signing out...' : 'Logout'}
+                </button>
               </div>
+            ) : (
+              <button
+                onClick={handleSignIn}
+                disabled={isLoading}
+                className="btn btn-primary"
+                style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+              >
+                {isLoading ? 'Signing in...' : 'Login'}
+              </button>
             )}
             
             {/* Theme toggle */}
@@ -86,47 +112,6 @@ export default function Navigation() {
             >
               {isDarkMode ? '☀️' : '🌙'}
             </button>
-
-            {/* User section */}
-            {!isLoading && (
-              <>
-                {isAuthenticated ? (
-                  <div className="flex items-center gap-3">
-                    {/* User avatar */}
-                    {user?.image && (
-                      <div 
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: '50%',
-                          backgroundImage: `url(${user.image})`,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center',
-                          backgroundColor: 'var(--bg-secondary)'
-                        }}
-                        title={user.name || 'User'}
-                      />
-                    )}
-                    {/* Logout button */}
-                    <button
-                      onClick={handleSignOut}
-                      className="btn btn-secondary"
-                      style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
-                    >
-                      Logout
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={handleSignIn}
-                    className="btn btn-primary"
-                    style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
-                  >
-                    Login
-                  </button>
-                )}
-              </>
-            )}
           </div>
         </nav>
       </div>

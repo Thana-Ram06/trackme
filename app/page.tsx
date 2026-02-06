@@ -1,18 +1,19 @@
 'use client'
 
 import Link from 'next/link'
-import { useAuth } from '@/hooks/useAuth'
+import { useSession } from 'next-auth/react'
 import { useEffect } from 'react'
 
 export default function Home() {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { data: session } = useSession()
+  const [isLoading, setIsLoading] = useState(false)
 
-  // Redirect to dashboard if already authenticated
+  // Auto-redirect to dashboard if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
+    if (session?.user) {
       window.location.href = '/dashboard'
     }
-  }, [isAuthenticated])
+  }, [session])
 
   if (isLoading) {
     return (
@@ -23,6 +24,10 @@ export default function Home() {
   }
 
   // Show landing page only for non-authenticated users
+  if (session?.user) {
+    return null // Will redirect via useEffect
+  }
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div className="container" style={{ maxWidth: '800px', textAlign: 'center' }}>
