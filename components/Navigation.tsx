@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { useSession, signOut } from 'next-auth/react'
 import { useAuth } from '@/hooks/useAuth'
 
 export default function Navigation() {
@@ -27,12 +26,13 @@ export default function Navigation() {
   }
 
   const handleSignIn = () => {
-    // Redirect to protected route which will trigger sign-in
     window.location.href = '/api/auth/signin'
   }
 
   const handleSignOut = () => {
-    signOut({ callbackUrl: '/' })
+    // For frontend-only version, just clear localStorage
+    localStorage.removeItem('theme')
+    window.location.href = '/'
   }
 
   return (

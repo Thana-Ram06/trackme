@@ -1,40 +1,47 @@
-import { calculateUserDashboardSummary, getUserUpcomingRenewals } from '@/lib/actions/dashboard'
+'use client'
+
 import { formatCurrency, formatDate } from '@/lib/utils'
 import Link from 'next/link'
+import { useAuth } from '@/hooks/useAuth'
 
-export default async function Dashboard() {
-  try {
-    const summary = await calculateUserDashboardSummary()
-    const upcomingRenewals = await getUserUpcomingRenewals()
+export default function Dashboard() {
+  const { isAuthenticated } = useAuth()
 
-    // Empty state for new users
-    if (summary.activeSubscriptions === 0 && upcomingRenewals.length === 0) {
-      return (
-        <div style={{ padding: '2rem 0', minHeight: '100vh' }}>
-          <div className="container">
-            <div style={{ marginBottom: '3rem' }}>
-              <h1>Dashboard</h1>
-              <p style={{ color: 'var(--text-secondary)' }}>
-                Overview of your recurring income and expenses
-              </p>
-            </div>
+  // Empty state for frontend-only version
+  const activeSubscriptions = []
+  const monthlyRecurringIncome = 0
+  const monthlyRecurringExpenses = 0
+  const netMonthlyBalance = 0
+  const upcomingRenewals = []
 
-            {/* Empty State */}
-            <div className="card" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-              <h2 style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
-                Welcome to Track.me!
-              </h2>
-              <p style={{ marginBottom: '2rem', color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto 2rem' }}>
-                You haven&apos;t added any subscriptions yet. Start tracking your recurring income and expenses to get insights into your financial patterns.
-              </p>
-              <Link href="/subscriptions" className="btn btn-primary">
-                Add Your First Subscription
-              </Link>
-            </div>
+  // Empty state for new users
+  if (activeSubscriptions.length === 0 && upcomingRenewals.length === 0) {
+    return (
+      <div style={{ padding: '2rem 0', minHeight: '100vh' }}>
+        <div className="container">
+          <div style={{ marginBottom: '3rem' }}>
+            <h1>Dashboard</h1>
+            <p style={{ color: 'var(--text-secondary)' }}>
+              Overview of your recurring income and expenses
+            </p>
+          </div>
+
+          {/* Empty State */}
+          <div className="card" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
+            <h2 style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
+              Welcome to Track.me!
+            </h2>
+            <p style={{ marginBottom: '2rem', color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto 2rem' }}>
+              You haven&apos;t added any subscriptions yet. Start tracking your recurring income and expenses to get insights into your financial patterns.
+            </p>
+            <Link href="/subscriptions" className="btn btn-primary">
+              Add Your First Subscription
+            </Link>
           </div>
         </div>
-      )
-    }
+      </div>
+    )
+  }
 
   return (
     <div style={{ padding: '2rem 0', minHeight: '100vh' }}>
@@ -53,7 +60,7 @@ export default async function Dashboard() {
               Active Subscriptions
             </h3>
             <p style={{ fontSize: '2rem', fontWeight: '600', margin: 0 }}>
-              {summary.activeSubscriptions}
+              {activeSubscriptions.length}
             </p>
           </div>
 
@@ -62,7 +69,7 @@ export default async function Dashboard() {
               Monthly Recurring Income
             </h3>
             <p style={{ fontSize: '2rem', fontWeight: '600', margin: 0, color: 'var(--success)' }}>
-              {formatCurrency(summary.monthlyRecurringIncome)}
+              {formatCurrency(monthlyRecurringIncome)}
             </p>
           </div>
 
@@ -71,7 +78,7 @@ export default async function Dashboard() {
               Monthly Recurring Expenses
             </h3>
             <p style={{ fontSize: '2rem', fontWeight: '600', margin: 0, color: 'var(--error)' }}>
-              {formatCurrency(summary.monthlyRecurringExpenses)}
+              {formatCurrency(monthlyRecurringExpenses)}
             </p>
           </div>
 
@@ -83,9 +90,9 @@ export default async function Dashboard() {
               fontSize: '2rem', 
               fontWeight: '600', 
               margin: 0,
-              color: summary.netMonthlyBalance >= 0 ? 'var(--success)' : 'var(--error)'
+              color: netMonthlyBalance >= 0 ? 'var(--success)' : 'var(--error)'
             }}>
-              {formatCurrency(summary.netMonthlyBalance)}
+              {formatCurrency(netMonthlyBalance)}
             </p>
           </div>
         </div>
@@ -99,85 +106,16 @@ export default async function Dashboard() {
             </Link>
           </div>
 
-          {upcomingRenewals.length > 0 ? (
-            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {upcomingRenewals.map((item, index) => (
-                  <div
-                    key={item.subscription.id}
-                    style={{
-                      padding: '1.5rem 24px',
-                      borderBottom: index < upcomingRenewals.length - 1 ? '1px solid var(--border-color)' : 'none',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <div>
-                      <Link 
-                        href={`/subscriptions/${item.subscription.id}`}
-                        style={{ 
-                          fontSize: '1.125rem', 
-                          fontWeight: '500', 
-                          color: 'var(--text-primary)',
-                          textDecoration: 'none'
-                        }}
-                      >
-                        {item.subscription.name}
-                      </Link>
-                      <p style={{ margin: '0.25rem 0', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                        {item.subscription.billingCycle.charAt(0).toUpperCase() + item.subscription.billingCycle.slice(1)} • {item.subscription.type}
-                      </p>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <p style={{ margin: 0, fontSize: '1.125rem', fontWeight: '500' }}>
-                        {formatCurrency(item.renewalAmount)}
-                      </p>
-                      <p style={{ margin: '0.25rem 0', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                        {item.daysUntilRenewal === 0 ? 'Today' : 
-                         item.daysUntilRenewal === 1 ? 'Tomorrow' : 
-                         `In ${item.daysUntilRenewal} days`}
-                      </p>
-                      <p style={{ margin: 0, color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>
-                        {formatDate(item.subscription.nextRenewalDate)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="card" style={{ textAlign: 'center', padding: '3rem 24px' }}>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                No upcoming renewals in the next 30 days
-              </p>
-              <Link href="/subscriptions" className="btn btn-primary">
-                Manage Subscriptions
-              </Link>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-  } catch (error) {
-    console.error('Dashboard error:', error)
-    return (
-      <div style={{ padding: '2rem 0', minHeight: '100vh' }}>
-        <div className="container">
-          <div className="card" style={{ textAlign: 'center', padding: '3rem 2rem' }}>
-            <h2 style={{ marginBottom: '1rem', color: 'var(--error)' }}>
-              Error Loading Dashboard
-            </h2>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-              Unable to load your dashboard data. Please try refreshing the page or contact support if the problem persists.
+          <div className="card" style={{ textAlign: 'center', padding: '3rem 24px' }}>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+              No upcoming renewals in next 30 days
             </p>
-            <Link href="/" className="btn btn-primary">
-              Back to Home
+            <Link href="/subscriptions" className="btn btn-primary">
+              Manage Subscriptions
             </Link>
           </div>
         </div>
       </div>
-    )
-  }
+    </div>
+  )
 }
