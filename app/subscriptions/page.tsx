@@ -10,7 +10,7 @@ export default function Subscriptions() {
   const [hoveredRow, setHoveredRow] = useState<string | null>(null)
 
   // Empty state for frontend-only version
-  const subscriptions = []
+  const subscriptions: any[] = []
 
   if (!isAuthenticated) {
     return null // Will be handled by middleware redirect
